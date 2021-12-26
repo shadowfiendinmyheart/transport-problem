@@ -123,6 +123,7 @@ const leastCostMethod = (matrix, stocks, needs) => {
     return methodMatrix;
 }
 
+// подсчитывает f(x)
 const findFX = (matrix) => {
     let F = 0;
     for (let i = 0; i < matrix.length; i++) {
@@ -136,35 +137,7 @@ const findFX = (matrix) => {
     return F;
 }
 
-// улучшение опорного плана
-// const improvementLeastCostMethod = (matrix) => {
-//     // TODO: сделать цикл
-//     let improvementMatrix = JSON.parse(JSON.stringify(matrix));
-//     const {UArray, VArray} = findPotentials(improvementMatrix);
-    
-//     const checkOptimal = isOptimal(improvementMatrix, UArray, VArray);
-
-//     if (!checkOptimal) {
-//         console.log('Решение является оптимальным, поздравляю!');
-//         showMatrix(improvementMatrix, UArray, VArray);
-//         return;
-//     }
-
-//     console.log('Построим замкнутый цикл:');
-//     console.log(`Максимальная свободная клетка - ${improvementMatrix[checkOptimal.i][checkOptimal.j].cost}\ni - ${checkOptimal.i}\nj - ${checkOptimal.j}`);
-    
-//     const loopedMatrix = makeClosedLoop(improvementMatrix, checkOptimal);
-//     const loopedArrays = findPotentials(loopedMatrix);
-//     const checkLoopedOptimal = isOptimal(loopedMatrix, loopedArrays.UArray, loopedArrays.VArray);
-
-//     if (!checkLoopedOptimal) {
-//         console.log('Решение является оптимальным, поздравляю!');
-//         showMatrix(loopedMatrix, loopedArrays.UArray, loopedArrays.VArray);
-//         console.log('F(x) = ', findFX(loopedMatrix));
-//         return;
-//     }
-// }
-
+// проверяет решение метода наимешньшей стоимости на оптимальность
 const improvementLeastCostMethod = (matrix) => {
     let improvementMatrix = JSON.parse(JSON.stringify(matrix));
     
@@ -181,7 +154,8 @@ const improvementLeastCostMethod = (matrix) => {
             isExit = true;
             return;
         }
-    
+
+        console.log('Решение не является оптимальным');
         console.log('Построим замкнутый цикл:');
         console.log(`Максимальная свободная клетка - ${improvementMatrix[checkOptimal.i][checkOptimal.j].cost}\ni - ${checkOptimal.i}\nj - ${checkOptimal.j}`);
         
@@ -193,18 +167,18 @@ const improvementLeastCostMethod = (matrix) => {
 // создаём замкнутый цикл
 // TODO: добавить провекрку на +/- в строке/столбце
 const makeClosedLoop = (matrix, firstElement) => {
-    let fixMatrix = JSON.parse(JSON.stringify(matrix));
-    for (let i = 0; i < fixMatrix.length; i++) {
-        for (let j = 0; j < fixMatrix[i].length; j++) {
-            fixMatrix[i][j] = {...fixMatrix[i][j], pos: `${i}${j}`}
+    let loopMatrix = JSON.parse(JSON.stringify(matrix));
+    for (let i = 0; i < loopMatrix.length; i++) {
+        for (let j = 0; j < loopMatrix[i].length; j++) {
+            loopMatrix[i][j] = {...loopMatrix[i][j], pos: `${i}${j}`}
         }
     }
 
     const startI = firstElement.i;
     const startJ = firstElement.j;
-    fixMatrix[startI][startJ] = {...fixMatrix[startI][startJ], sign: '+'}
+    loopMatrix[startI][startJ] = {...loopMatrix[startI][startJ], sign: '+'}
 
-    const startPoint = fixMatrix[startI][startJ];
+    const startPoint = loopMatrix[startI][startJ];
     let usedCells;
     let isEnd = false;
     const fillLine = (line, element, isRow, path) => {
@@ -232,32 +206,32 @@ const makeClosedLoop = (matrix, firstElement) => {
         for (let i = 0; i < line.length; i++) {
             if (line[i].use > 0 && line[i] != element) {
                 if (isRow) {
-                    fillLine(fixMatrix.map(element =>  element[i]), line[i], false, [...path, element]);
+                    fillLine(loopMatrix.map(element =>  element[i]), line[i], false, [...path, element]);
                 } else {
-                    fillLine(fixMatrix[i], line[i], true, [...path, element]);
+                    fillLine(loopMatrix[i], line[i], true, [...path, element]);
                 }
             }
         }
     }
 
     // запускаем рекурсию
-    for (let i = 0; i < fixMatrix[startI].length; i++) {
-        if (fixMatrix[startI][i].use > 0 && fixMatrix[startI][i] != startPoint) {
-            fillLine(fixMatrix.map(element =>  element[i]), fixMatrix[startI][i], false, []);
+    for (let i = 0; i < loopMatrix[startI].length; i++) {
+        if (loopMatrix[startI][i].use > 0 && loopMatrix[startI][i] != startPoint) {
+            fillLine(loopMatrix.map(element =>  element[i]), loopMatrix[startI][i], false, []);
         }
     }
 
     // проставляем знаки '+' и '-'
     isPlus = false;
-    for (let i = 0; i < fixMatrix.length; i++) {
-        for (let j = 0; j < fixMatrix[i].length; j++) {
-            if (usedCells.findIndex(usedCell => usedCell.pos == fixMatrix[i][j].pos) > -1) {
-                fixMatrix[i][j].sign = isPlus ? '+' : '-';
+    for (let i = 0; i < loopMatrix.length; i++) {
+        for (let j = 0; j < loopMatrix[i].length; j++) {
+            if (usedCells.findIndex(usedCell => usedCell.pos == loopMatrix[i][j].pos) > -1) {
+                loopMatrix[i][j].sign = isPlus ? '+' : '-';
                 isPlus = !isPlus;
             }
         }
     }
-    showMatrix(fixMatrix, [], []);
+    showMatrix(loopMatrix, [], []);
 
     //ищем минимальное значение среди чисел со знаком минус
     let min = {
@@ -266,11 +240,11 @@ const makeClosedLoop = (matrix, firstElement) => {
         i: 0,
         j: 0
     }
-    for (let i = 0; i < fixMatrix.length; i++) {
-        for (let j = 0; j < fixMatrix[i].length; j++) {
-            if (fixMatrix[i][j].sign === '-' && fixMatrix[i][j].use < min.use) {
+    for (let i = 0; i < loopMatrix.length; i++) {
+        for (let j = 0; j < loopMatrix[i].length; j++) {
+            if (loopMatrix[i][j].sign === '-' && loopMatrix[i][j].use < min.use) {
                 min = {
-                    ...fixMatrix[i][j],
+                    ...loopMatrix[i][j],
                     i,
                     j
                 }
@@ -279,42 +253,42 @@ const makeClosedLoop = (matrix, firstElement) => {
     }
     console.log(`Минимальное значение среди чисел со знаком минус - ${min.cost}[${min.use}]\ni - ${min.i}\nj - ${min.j}`);
 
-    // вычитаем вышенайденное значение из чисел, имеющих знак '-'
+    // вычитаем найденное выше значение из чисел, имеющих знак '-'
     // и прибавляем к числам, имеющие знак '+'
     console.log("Вычтем этот элемент из элементов со знаком '-'\nи прибавим к элементам со знаком '+'")
-    for (let i = 0; i < fixMatrix.length; i++) {
-        for (let j = 0; j < fixMatrix[i].length; j++) {
-            if (fixMatrix[i][j].sign === '-') {
-                fixMatrix[i][j].use = fixMatrix[i][j].use - min.use;
+    for (let i = 0; i < loopMatrix.length; i++) {
+        for (let j = 0; j < loopMatrix[i].length; j++) {
+            if (loopMatrix[i][j].sign === '-') {
+                loopMatrix[i][j].use = loopMatrix[i][j].use - min.use;
             }
 
-            if (fixMatrix[i][j].sign === '+') {
-                fixMatrix[i][j].use = fixMatrix[i][j].use + min.use;
+            if (loopMatrix[i][j].sign === '+') {
+                loopMatrix[i][j].use = loopMatrix[i][j].use + min.use;
             }
 
-            // убираем лишнее свойста из объекта
-            fixMatrix[i][j] = {
-                cost: fixMatrix[i][j].cost,
-                use: fixMatrix[i][j].use
+            // убираем лишние свойста из массива
+            loopMatrix[i][j] = {
+                cost: loopMatrix[i][j].cost,
+                use: loopMatrix[i][j].use
             }
         }
     }
-    showMatrix(fixMatrix, [], []);
-    return fixMatrix;
+    showMatrix(loopMatrix, [], []);
+    return loopMatrix;
 }
 
 // находит потенциалы (U и V)
 const findPotentials = (matrix) => {
     let potentialsMatrix = JSON.parse(JSON.stringify(matrix));
 
-    // v потенциал (строка)
+    // V потенциал (строка)
     const VArray = new Array(matrix[0].length);
 
-    // u потенциал (столбец)
+    // U потенциал (столбец)
     const UArray = new Array(matrix.length);
     UArray[0] = 0;
     
-    // занятные клетки
+    // создаём массив с занятыми клетками
     const filledCells = [];
     for (let i = 0; i < potentialsMatrix.length; i++) {
         for (let j = 0; j < potentialsMatrix[i].length; j++) {
@@ -329,18 +303,19 @@ const findPotentials = (matrix) => {
     }
     
     // заполняем V и U (решаем систему уравнений)
+    console.log('Заполним предварительные потенциалы V и U\n')
     do {
         for (let i = 0; i < filledCells.length; i++) {
             const cell = filledCells[i];
             
             if (typeof VArray[cell.j] != 'undefined' && typeof UArray[cell.i] == 'undefined') {
-                console.log('cell', cell);
+                console.log(`Выбираем клетку - \ni: ${cell.i} j: ${cell.j} \nЗначение: ${cell.cost}`);
                 UArray[cell.i] = cell.cost - VArray[cell.j];
                 break;
             }
     
             if (typeof UArray[cell.i] != 'undefined' && typeof VArray[cell.j] == 'undefined') {
-                console.log('cell', cell);
+                console.log(`Выбираем клетку - \ni: ${cell.i} j: ${cell.j} \nЗначение: ${cell.cost}`);
                 VArray[cell.j] = cell.cost - UArray[cell.i];
                 break;
             }
@@ -348,7 +323,7 @@ const findPotentials = (matrix) => {
         
         showMatrix(potentialsMatrix, UArray, VArray);
     } while (isUndefined(VArray) || isUndefined(UArray))
-
+    console.log('===============================================\n')
     return {
         VArray,
         UArray
@@ -374,15 +349,19 @@ isOptimal = (matrix, UArray, VArray) => {
     for (let i = 0; i < matrix.length; i++) {
         for (let j = 0; j < matrix[i].length; j++) {
             if (matrix[i][j].use === 0 && VArray[j] + UArray[i] > matrix[i][j].cost) {
-                elements.push({ i, j, number: VArray[j] + UArray[i] - matrix[i][j].cost})
+                elements.push({ i, j, difference: VArray[j] + UArray[i] - matrix[i][j].cost})
             }
         }
     }
 
     if (elements.length > 0) {
+        console.log('Неоптимальные элементы:');
+        for (let i = 0; i < elements.length; i++) {
+            console.log(`i: ${elements[i].i} j: ${elements[i].j} значение: ${matrix[elements[i].i][elements[i].j].cost} разница: ${elements[i].difference}`)
+        }
         let minElement = elements[0];
         for (let i = 0; i < elements.length; i++) {
-            if (elements[i].number > minElement.number) {
+            if (elements[i].difference > minElement.difference) {
                 minElement = elements[i];
             }
         }
@@ -401,7 +380,6 @@ const run = () => {
 
     console.log('\nПроизведём улучшение опорного плана:')
     improvementLeastCostMethod(leastCostMatrix);
-    
 }
 
 run();
