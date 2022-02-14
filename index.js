@@ -2,24 +2,6 @@
 const SETW_SIZE = 8;
 
 // матрица
-// const matrix = [
-//     [15, 6, 25, 11, 12],
-//     [13, 14, 20, 27, 30],
-//     [16, 7, 19, 10, 21],
-//     [1, 29, 23, 25, 18],
-// ];
-// const matrix = [
-//     [30, 24, 11, 12, 25],
-//     [26, 4, 29, 20, 24],
-//     [27, 14, 14, 10, 18],
-//     [6, 14, 28, 8, 2],
-// ];
-// const matrix = [
-//     [9, 17, 29, 28, 8],
-//     [13, 21, 27, 16, 29],
-//     [20, 30, 24, 7, 26],
-//     [11, 19, 30, 6, 2],
-// ];
 const matrix = [
     [10, 17, 9, 20, 30],
     [13, 4, 24, 26, 26],
@@ -28,15 +10,9 @@ const matrix = [
 ];
 
 // запасы (последний столбик)
-// const stocks = [9, 18, 23, 26];
-// const stocks = [21, 19, 15, 25];
-// const stocks = [22, 13, 17, 18];
 const stocks = [15, 15, 19, 11];
 
 // потребности (последняя строка)
-// const needs = [11, 22, 31, 6, 6];
-// const needs = [15, 15, 15, 15, 20];
-// const needs = [7, 7, 7, 7, 42];
 const needs = [9, 24, 9, 9, 9];
 
 // аналог setw из C++
@@ -165,7 +141,6 @@ const findFX = (matrix) => {
 const improvementLeastCostMethod = (matrix) => {
     let improvementMatrix = JSON.parse(JSON.stringify(matrix));
     
-    // TODO: возможно стоит поменять логику цикла
     let isExit = false;
     do {
         let potentials = findPotentials(improvementMatrix);
@@ -189,7 +164,6 @@ const improvementLeastCostMethod = (matrix) => {
 }
 
 // создаём замкнутый цикл
-// TODO: добавить провекрку на +/- в строке/столбце
 const makeClosedLoop = (matrix, firstElement) => {
     let loopMatrix = JSON.parse(JSON.stringify(matrix));
     for (let i = 0; i < loopMatrix.length; i++) {
